@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - {{ company.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 250px;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .stat-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 100%;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .table-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .badge-pending { background-color: var(--warning-color); }
+        .badge-approved { background-color: var(--success-color); }
+        .badge-rejected { background-color: var(--danger-color); }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .header-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-action {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin: 0 2px;
+        }
+        .quick-action-btn {
+            border-radius: 10px;
+            padding: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .filter-badge {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-badge:hover {
+            transform: scale(1.05);
+        }
+        .expense-receipt-thumb {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="p-4">
+                    <h4 class="mb-4"><i class="bi bi-cash-stack"></i> ExpenseHub</h4>
+                    <div class="text-white-50 small mb-4">{{ company.name }}</div>
+                </div>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="{% url 'admin_dashboard' %}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#usersModal">
+                        <i class="bi bi-people"></i> User Management <span class="badge bg-light text-dark ms-2">{{ total_users }}</span>
+                    </a>
+                    <a class="nav-link" href="#expensesSection" onclick="scrollToSection('expensesSection')">
+                        <i class="bi bi-receipt"></i> All Expenses <span class="badge bg-warning ms-2">{{ pending_expenses }}</span>
+                    </a>
+                    <a class="nav-link" href="#approvalsSection" onclick="scrollToSection('approvalsSection')">
+                        <i class="bi bi-check-circle"></i> Pending Approvals
+                    </a>
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#approvalRulesModal">
+                        <i class="bi bi-diagram-3"></i> Approval Rules
+                    </a>
+                    <a class="nav-link" href="#">
+                        <i class="bi bi-graph-up"></i> Reports
+                    </a>
+                    <a class="nav-link" href="#">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </nav>
+                
+                <div class="position-absolute bottom-0 p-4 w-100">
+                    <div class="d-flex align-items-center">
+                        <div class="user-avatar me-2">
+                            {{ user.first_name.0 }}{{ user.last_name.0 }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small">{{ user.get_full_name }}</div>
+                            <div class="text-white-50" style="font-size: 12px;">Admin</div>
+                        </div>
+                        <a href="{% url 'logout' %}" class="text-white" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Header -->
+                <div class="header-section">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">Welcome back, {{ user.first_name }}! 👋</h2>
+                            <p class="text-muted mb-0">Here's what's happening with your company expenses today.</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                                <i class="bi bi-person-plus"></i> Add User
+                            </button>
+                            <span class="badge bg-light text-dark px-3 py-2">
+                                <i class="bi bi-cash"></i> {{ company.currency }}
+                            </span>
+                            <span class="badge bg-light text-dark px-3 py-2 ms-2">
+                                <i class="bi bi-geo-alt"></i> {{ company.country }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistics Cards Row 1 -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted mb-1">Total Expenses</p>
+                                        <h3 class="mb-0">{{ total_expenses }}</h3>
+                                        <small class="text-success"><i class="bi bi-arrow-up"></i> All time</small>
+                                    </div>
+                                    <div class="stat-icon" style="background-color: rgba(79, 70, 229, 0.1); color: var(--primary-color);">
+                                        <i class="bi bi-receipt"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted mb-1">Pending</p>
+                                        <h3 class="mb-0">{{ pending_expenses }}</h3>
+                                        <small class="text-warning"><i class="bi bi-clock"></i> {{ pending_amount|floatformat:2 }} {{ company.currency }}</small>
+                                    </div>
+                                    <div class="stat-icon" style="background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                                        <i class="bi bi-hourglass-split"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted mb-1">Approved</p>
+                                        <h3 class="mb-0">{{ approved_expenses }}</h3>
+                                        <small class="text-success"><i class="bi bi-check-circle"></i> {{ total_amount|floatformat:2 }} {{ company.currency }}</small>
+                                    </div>
+                                    <div class="stat-icon" style="background-color: rgba(16, 185, 129, 0.1); color: var(--success-color);">
+                                        <i class="bi bi-check-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted mb-1">Rejected</p>
+                                        <h3 class="mb-0">{{ rejected_expenses }}</h3>
+                                        <small class="text-danger"><i class="bi bi-x-circle"></i> Declined</small>
+                                    </div>
+                                    <div class="stat-icon" style="background-color: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+                                        <i class="bi bi-x-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards Row 2 -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted mb-1">Total Users</p>
+                                        <h3 class="mb-0">{{ total_users }}</h3>
+                                        <small class="text-muted">
+                                            {{ admins_count }} Admin, {{ managers_count }} Managers
+                                        </small>
+                                    </div>
+                                    <div class="stat-icon" style="background-color: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                                        <i class="bi bi-people"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted mb-1">Approval Rules</p>
+                                        <h3 class="mb-0">{{ approval_rules_count }}</h3>
+                                        <small class="text-muted">Active rules</small>
+                                    </div>
+                                    <div class="stat-icon" style="background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                                        <i class="bi bi-diagram-3"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <p class="text-muted mb-2">Top Spender</p>
+                                {% if top_spenders %}
+                                    <h4 class="mb-1">{{ top_spenders.0.employee__first_name }} {{ top_spenders.0.employee__last_name }}</h4>
+                                    <small class="text-primary"><i class="bi bi-cash"></i> {{ top_spenders.0.total_spent|floatformat:2 }} {{ company.currency }}</small>
+                                {% else %}
+                                    <p class="text-muted">No expenses yet</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row g-4">
+                    <!-- All Expenses Table -->
+                    <div class="col-md-8" id="expensesSection">
+                        <div class="card table-card">
+                            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                                <h5 class="mb-0">All Expenses</h5>
+                                <div>
+                                    <span class="badge filter-badge bg-secondary me-1" onclick="filterExpenses('all')">All</span>
+                                    <span class="badge filter-badge bg-warning me-1" onclick="filterExpenses('pending')">Pending</span>
+                                    <span class="badge filter-badge bg-success me-1" onclick="filterExpenses('approved')">Approved</span>
+                                    <span class="badge filter-badge bg-danger" onclick="filterExpenses('rejected')">Rejected</span>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Employee</th>
+                                                <th>Category</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="expensesTableBody">
+                                            {% for expense in recent_expenses %}
+                                            <tr class="expense-row" data-status="{{ expense.status }}">
+                                                <td><strong>#{{ expense.id }}</strong></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="user-avatar me-2" style="width: 32px; height: 32px; font-size: 14px;">
+                                                            {{ expense.employee.first_name.0 }}{{ expense.employee.last_name.0 }}
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-semibold">{{ expense.employee.get_full_name }}</div>
+                                                            <small class="text-muted">{{ expense.employee.email }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="bi bi-tag"></i> {{ expense.get_category_display }}
+                                                    </span>
+                                                </td>
+                                                <td class="fw-semibold">{{ expense.amount }} {{ expense.currency }}</td>
+                                                <td>{{ expense.expense_date|date:"M d, Y" }}</td>
+                                                <td>
+                                                    <span class="badge badge-{{ expense.status }}">
+                                                        {{ expense.get_status_display }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-secondary btn-action" onclick="viewExpenseDetails({{ expense.id }})" title="View Details">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                    {% if expense.status == 'pending' %}
+                                                    <button class="btn btn-sm btn-success btn-action" onclick="approveExpense({{ expense.id }})" title="Approve">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger btn-action" onclick="showRejectModal({{ expense.id }})" title="Reject">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="7" class="text-center py-4 text-muted">
+                                                    <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                                                    <p class="mt-2">No expenses yet</p>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Sidebar -->
+                    <div class="col-md-4">
+                        <!-- Expense by Category -->
+                        <div class="card table-card mb-4">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h5 class="mb-0">Expenses by Category</h5>
+                            </div>
+                            <div class="card-body">
+                                {% for stat in category_stats %}
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>{{ stat.category|title }}</span>
+                                        <span class="fw-semibold">{{ stat.total|floatformat:0 }} {{ company.currency }}</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: {% widthratio stat.total total_amount 100 %}%;" aria-valuenow="{{ stat.total }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-muted">{{ stat.count }} expense(s)</small>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-pie-chart" style="font-size: 48px;"></i>
+                                    <p class="mt-2">No approved expenses yet</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="card table-card">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h5 class="mb-0">Quick Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary quick-action-btn" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                                        <i class="bi bi-person-plus"></i> Add User
+                                    </button>
+                                    <button class="btn btn-outline-primary quick-action-btn" data-bs-toggle="modal" data-bs-target="#usersModal">
+                                        <i class="bi bi-people"></i> Manage Users
+                                    </button>
+                                    <button class="btn btn-outline-primary quick-action-btn" data-bs-toggle="modal" data-bs-target="#approvalRulesModal">
+                                        <i class="bi bi-diagram-3"></i> Approval Rules
+                                    </button>
+                                    <button class="btn btn-outline-primary quick-action-btn">
+                                        <i class="bi bi-file-earmark-text"></i> Generate Report
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pending Approvals Section -->
+                {% if pending_approvals %}
+                <div class="row mt-4" id="approvalsSection">
+                    <div class="col-12">
+                        <div class="card table-card">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Your Pending Approvals</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Employee</th>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                                <th>Category</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for approval in pending_approvals %}
+                                            <tr>
+                                                <td>{{ approval.expense.employee.get_full_name }}</td>
+                                                <td>{{ approval.expense.description|truncatewords:10 }}</td>
+                                                <td class="fw-semibold">{{ approval.expense.amount }} {{ approval.expense.currency }}</td>
+                                                <td>{{ approval.expense.expense_date|date:"M d, Y" }}</td>
+                                                <td><span class="badge bg-light text-dark">{{ approval.expense.get_category_display }}</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-success me-1" onclick="approveExpense({{ approval.expense.id }})">
+                                                        <i class="bi bi-check"></i> Approve
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="showRejectModal({{ approval.expense.id }})">
+                                                        <i class="bi bi-x"></i> Reject
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> Add New User</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name *</label>
+                                <input type="text" class="form-control" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" name="last_name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username *</label>
+                                <input type="text" class="form-control" name="username" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password *</label>
+                                <input type="password" class="form-control" name="password" value="password123" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text" class="form-control" name="phone">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Role *</label>
+                                <select class="form-select" name="role" required>
+                                    <option value="employee">Employee</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Manager</label>
+                                <select class="form-select" name="manager_id">
+                                    <option value="">No Manager</option>
+                                    {% for user in all_users %}
+                                        {% if user.role in 'manager,admin' %}
+                                        <option value="{{ user.id }}">{{ user.get_full_name }} ({{ user.get_role_display }})</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitAddUser()">
+                        <i class="bi bi-plus-circle"></i> Add User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil"></i> Edit User</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" name="user_id" id="edit_user_id">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name *</label>
+                                <input type="text" class="form-control" name="first_name" id="edit_first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" name="last_name" id="edit_last_name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" name="email" id="edit_email" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text" class="form-control" name="phone" id="edit_phone">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Role *</label>
+                                <select class="form-select" name="role" id="edit_role" required>
+                                    <option value="employee">Employee</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Manager</label>
+                                <select class="form-select" name="manager_id" id="edit_manager_id">
+                                    <option value="">No Manager</option>
+                                    {% for user in all_users %}
+                                        {% if user.role in 'manager,admin' %}
+                                        <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEditUser()">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- All Users Modal -->
+    <div class="modal fade" id="usersModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-people"></i> All Users ({{ total_users }})</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Manager</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user_item in all_users %}
+                                <tr id="user-row-{{ user_item.id }}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="user-avatar me-2" style="width: 32px; height: 32px; font-size: 14px;">
+                                                {{ user_item.first_name.0 }}{{ user_item.last_name.0 }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ user_item.get_full_name }}</div>
+                                                <small class="text-muted">@{{ user_item.username }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ user_item.email }}</td>
+                                    <td>
+                                        <span class="badge {% if user_item.role == 'admin' %}bg-danger{% elif user_item.role == 'manager' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                            {{ user_item.get_role_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ user_item.manager.get_full_name|default:"N/A" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary btn-action" onclick="editUser({{ user_item.id }})" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        {% if user_item.id != user.id %}
+                                        <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteUser({{ user_item.id }}, '{{ user_item.get_full_name }}')" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reject Expense Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-x-circle"></i> Reject Expense</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="reject_expense_id">
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Rejection *</label>
+                        <textarea class="form-control" id="reject_comments" rows="4" placeholder="Please provide a reason for rejecting this expense..." required></textarea>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> This action cannot be undone. The employee will be notified.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="submitRejectExpense()">
+                        <i class="bi bi-x-circle"></i> Reject Expense
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Rules Modal -->
+    <div class="modal fade" id="approvalRulesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-diagram-3"></i> Approval Rules</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Approval rules define how expenses are reviewed and approved. Coming soon!
+                    </div>
+                    <button class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create New Rule
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+        
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toastHTML = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            const toastContainer = document.querySelector('.toast-container');
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = toastContainer.lastElementChild;
+            const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+            toast.show();
+            toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+        }
+        
+        // Submit Add User
+        function submitAddUser() {
+            const form = document.getElementById('addUserForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            fetch('/add-user/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+                    form.reset();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast(data.error, 'danger');
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred', 'danger');
+            });
+        }
+        
+        // Edit User
+        function editUser(userId) {
+            fetch(`/get-user/${userId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('edit_user_id').value = data.user.id;
+                    document.getElementById('edit_first_name').value = data.user.first_name;
+                    document.getElementById('edit_last_name').value = data.user.last_name;
+                    document.getElementById('edit_email').value = data.user.email;
+                    document.getElementById('edit_phone').value = data.user.phone;
+                    document.getElementById('edit_role').value = data.user.role;
+                    document.getElementById('edit_manager_id').value = data.user.manager_id;
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('usersModal')).hide();
+                    new bootstrap.Modal(document.getElementById('editUserModal')).show();
+                }
+            });
+        }
+        
+        // Submit Edit User
+        function submitEditUser() {
+            const userId = document.getElementById('edit_user_id').value;
+            const form = document.getElementById('editUserForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            fetch(`/edit-user/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast(data.error, 'danger');
+                }
+            });
+        }
+        
+        // Delete User
+        function deleteUser(userId, userName) {
+            if (confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+                fetch(`/delete-user/${userId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        document.getElementById(`user-row-${userId}`).remove();
+                    } else {
+                        showToast(data.error, 'danger');
+                    }
+                });
+            }
+        }
+        
+        // Approve Expense
+        function approveExpense(expenseId) {
+            if (confirm('Are you sure you want to approve this expense?')) {
+                fetch(`/approve-expense/${expenseId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showToast(data.error, 'danger');
+                    }
+                });
+            }
+        }
+        
+        // Show Reject Modal
+        function showRejectModal(expenseId) {
+            document.getElementById('reject_expense_id').value = expenseId;
+            document.getElementById('reject_comments').value = '';
+            new bootstrap.Modal(document.getElementById('rejectModal')).show();
+        }
+        
+        // Submit Reject Expense
+        function submitRejectExpense() {
+            const expenseId = document.getElementById('reject_expense_id').value;
+            const comments = document.getElementById('reject_comments').value;
+            
+            if (!comments.trim()) {
+                alert('Please provide a reason for rejection');
+                return;
+            }
+            
+            fetch(`/reject-expense/${expenseId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ comments: comments })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'warning');
+                    bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast(data.error, 'danger');
+                }
+            });
+        }
+        
+        // Filter Expenses
+        function filterExpenses(status) {
+            const rows = document.querySelectorAll('.expense-row');
+            rows.forEach(row => {
+                if (status === 'all' || row.dataset.status === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // Scroll to section
+        function scrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // View Expense Details (placeholder)
+        function viewExpenseDetails(expenseId) {
+            alert('Expense details view - Coming soon!');
+        }
+    </script>
+</body>
+</html>

@@ -145,8 +145,8 @@ STATIC_ROOT = os.path.join(
 )  # Directory for collected static files
 
 # Media files 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "/media/"  # URL to access media files
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")  # Directory to store uploaded media files
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - {{ company.name }}</title>
+    <title>Admin Dashboard - ExpenseHub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
@@ -13,44 +14,75 @@
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
         }
+
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
         }
+
         .sidebar {
             min-height: 100vh;
             background: linear-gradient(180deg, #4f46e5 0%, #6366f1 100%);
             color: white;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             position: fixed;
             width: 250px;
+            z-index: 1000;
+            transition: transform 0.3s ease;
         }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
         .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
+            color: rgba(255, 255, 255, 0.8);
             padding: 12px 20px;
             margin: 5px 10px;
             border-radius: 8px;
             transition: all 0.3s;
         }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            background-color: rgba(255,255,255,0.2);
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
             color: white;
         }
+
         .main-content {
             margin-left: 250px;
             padding: 20px;
+            transition: margin-left 0.3s ease;
+            width: calc(100% - 250px);
         }
+
+        @media (max-width: 992px) {
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
         .stat-card {
             border: none;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             transition: transform 0.2s, box-shadow 0.2s;
             height: 100%;
         }
+
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+
         .stat-icon {
             width: 50px;
             height: 50px;
@@ -60,14 +92,25 @@
             justify-content: center;
             font-size: 24px;
         }
+
         .table-card {
             border: none;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
-        .badge-pending { background-color: var(--warning-color); }
-        .badge-approved { background-color: var(--success-color); }
-        .badge-rejected { background-color: var(--danger-color); }
+
+        .badge-pending {
+            background-color: var(--warning-color);
+        }
+
+        .badge-approved {
+            background-color: var(--success-color);
+        }
+
+        .badge-rejected {
+            background-color: var(--danger-color);
+        }
+
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -79,45 +122,54 @@
             color: white;
             font-weight: 600;
         }
+
         .header-section {
             background: white;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             margin-bottom: 30px;
         }
+
         .modal-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
+
         .btn-action {
             padding: 5px 10px;
             font-size: 12px;
             margin: 0 2px;
         }
+
         .quick-action-btn {
             border-radius: 10px;
             padding: 15px;
             font-weight: 600;
             transition: all 0.3s;
         }
+
         .quick-action-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+
         .toast-container {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 9999;
         }
+
         .filter-badge {
             cursor: pointer;
             transition: all 0.2s;
         }
+
         .filter-badge:hover {
             transform: scale(1.05);
         }
+
         .expense-receipt-thumb {
             width: 40px;
             height: 40px;
@@ -125,30 +177,139 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        /* Mobile sidebar toggle button */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar-toggle {
+                display: block;
+            }
+        }
+
+        /* Overlay for mobile sidebar */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header-section .d-flex {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+
+            .header-section .d-flex>div:last-child {
+                margin-top: 15px;
+            }
+
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+
+            .btn-action {
+                margin-bottom: 5px;
+            }
+
+            .stat-card .d-flex {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .stat-icon {
+                margin-top: 10px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 10px;
+            }
+
+            .header-section {
+                padding: 15px;
+            }
+
+            .card-body {
+                padding: 15px;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.5rem;
+            }
+
+            .badge {
+                font-size: 0.7rem;
+            }
+        }
+
+        /* Ensure tables don't overflow */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Fix for action buttons in tables */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
     </style>
 </head>
+
 <body>
     <!-- Toast Container -->
     <div class="toast-container"></div>
 
+    <!-- Mobile sidebar toggle -->
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Overlay for mobile sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <div class="container-fluid p-0">
         <div class="row g-0">
             <!-- Sidebar -->
-            <div class="sidebar">
+            <div class="sidebar" id="sidebar">
                 <div class="p-4">
                     <h4 class="mb-4"><i class="bi bi-cash-stack"></i> ExpenseHub</h4>
-                    <div class="text-white-50 small mb-4">{{ company.name }}</div>
+                    <div class="text-white-50 small mb-4">Company Name</div>
                 </div>
-                
+
                 <nav class="nav flex-column">
-                    {% comment %} <a class="nav-link active" href="{% url 'admin_dashboard' %}">
-                        <i class="bi bi-speedometer2"></i> Dashboard
-                    </a> {% endcomment %}
                     <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#usersModal">
-                        <i class="bi bi-people"></i> User Management <span class="badge bg-light text-dark ms-2">{{ total_users }}</span>
+                        <i class="bi bi-people"></i> User Management <span
+                            class="badge bg-light text-dark ms-2">15</span>
                     </a>
                     <a class="nav-link" href="#expensesSection" onclick="scrollToSection('expensesSection')">
-                        <i class="bi bi-receipt"></i> All Expenses <span class="badge bg-warning ms-2">{{ pending_expenses }}</span>
+                        <i class="bi bi-receipt"></i> All Expenses <span class="badge bg-warning ms-2">5</span>
                     </a>
                     <a class="nav-link" href="#approvalsSection" onclick="scrollToSection('approvalsSection')">
                         <i class="bi bi-check-circle"></i> Pending Approvals
@@ -163,28 +324,31 @@
                         <i class="bi bi-gear"></i> Settings
                     </a>
                 </nav>
-                
+
                 <div class="position-absolute bottom-0 p-4 w-100">
                     <div class="d-flex align-items-center">
                         <div class="user-avatar me-2">
-                            {{ user.first_name.0 }}{{ user.last_name.0 }}
+                            JD
                         </div>
                         <div class="flex-grow-1">
-                            <div class="small">{{ user.get_full_name }}</div>
+                            <div class="small">John Doe</div>
                             <div class="text-white-50" style="font-size: 12px;">Admin</div>
                         </div>
+<<<<<<< HEAD
                         <a href="{% url 'adminFunc:admin_logout' %}" class="text-white" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
+=======
+>>>>>>> ce3458c75ed237f0330d593345bffce817ec68b3
                     </div>
                 </div>
             </div>
-            
+
             <!-- Main Content -->
-            <div class="main-content">
+            <div class="main-content" id="mainContent">
                 <!-- Header -->
                 <div class="header-section">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h2 class="mb-1">Welcome back, {{ user.first_name }}! 👋</h2>
+                            <h2 class="mb-1">Welcome back, John! 👋</h2>
                             <p class="text-muted mb-0">Here's what's happening with your company expenses today.</p>
                         </div>
                         <div>
@@ -192,78 +356,83 @@
                                 <i class="bi bi-person-plus"></i> Add User
                             </button>
                             <span class="badge bg-light text-dark px-3 py-2">
-                                <i class="bi bi-cash"></i> {{ company.currency }}
+                                <i class="bi bi-cash"></i> USD
                             </span>
                             <span class="badge bg-light text-dark px-3 py-2 ms-2">
-                                <i class="bi bi-geo-alt"></i> {{ company.country }}
+                                <i class="bi bi-geo-alt"></i> USA
                             </span>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Statistics Cards Row 1 -->
                 <div class="row g-4 mb-4">
-                    <div class="col-md-3">
+                    <div class="col-xl-3 col-md-6">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <p class="text-muted mb-1">Total Expenses</p>
-                                        <h3 class="mb-0">{{ total_expenses }}</h3>
+                                        <h3 class="mb-0">142</h3>
                                         <small class="text-success"><i class="bi bi-arrow-up"></i> All time</small>
                                     </div>
-                                    <div class="stat-icon" style="background-color: rgba(79, 70, 229, 0.1); color: var(--primary-color);">
+                                    <div class="stat-icon"
+                                        style="background-color: rgba(79, 70, 229, 0.1); color: var(--primary-color);">
                                         <i class="bi bi-receipt"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-md-3">
+
+                    <div class="col-xl-3 col-md-6">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <p class="text-muted mb-1">Pending</p>
-                                        <h3 class="mb-0">{{ pending_expenses }}</h3>
-                                        <small class="text-warning"><i class="bi bi-clock"></i> {{ pending_amount|floatformat:2 }} {{ company.currency }}</small>
+                                        <h3 class="mb-0">5</h3>
+                                        <small class="text-warning"><i class="bi bi-clock"></i> 1,250.00 USD</small>
                                     </div>
-                                    <div class="stat-icon" style="background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                                    <div class="stat-icon"
+                                        style="background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
                                         <i class="bi bi-hourglass-split"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-md-3">
+
+                    <div class="col-xl-3 col-md-6">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <p class="text-muted mb-1">Approved</p>
-                                        <h3 class="mb-0">{{ approved_expenses }}</h3>
-                                        <small class="text-success"><i class="bi bi-check-circle"></i> {{ total_amount|floatformat:2 }} {{ company.currency }}</small>
+                                        <h3 class="mb-0">125</h3>
+                                        <small class="text-success"><i class="bi bi-check-circle"></i> 15,420.50
+                                            USD</small>
                                     </div>
-                                    <div class="stat-icon" style="background-color: rgba(16, 185, 129, 0.1); color: var(--success-color);">
+                                    <div class="stat-icon"
+                                        style="background-color: rgba(16, 185, 129, 0.1); color: var(--success-color);">
                                         <i class="bi bi-check-circle"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-md-3">
+
+                    <div class="col-xl-3 col-md-6">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <p class="text-muted mb-1">Rejected</p>
-                                        <h3 class="mb-0">{{ rejected_expenses }}</h3>
+                                        <h3 class="mb-0">12</h3>
                                         <small class="text-danger"><i class="bi bi-x-circle"></i> Declined</small>
                                     </div>
-                                    <div class="stat-icon" style="background-color: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+                                    <div class="stat-icon"
+                                        style="background-color: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
                                         <i class="bi bi-x-circle"></i>
                                     </div>
                                 </div>
@@ -274,74 +443,162 @@
 
                 <!-- Statistics Cards Row 2 -->
                 <div class="row g-4 mb-4">
-                    <div class="col-md-3">
+                    <div class="col-xl-3 col-md-6">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <p class="text-muted mb-1">Total Users</p>
-                                        <h3 class="mb-0">{{ total_users }}</h3>
+                                        <h3 class="mb-0">15</h3>
                                         <small class="text-muted">
-                                            {{ admins_count }} Admin, {{ managers_count }} Managers
+                                            2 Admin, 3 Managers
                                         </small>
                                     </div>
-                                    <div class="stat-icon" style="background-color: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                                    <div class="stat-icon"
+                                        style="background-color: rgba(99, 102, 241, 0.1); color: #6366f1;">
                                         <i class="bi bi-people"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-md-3">
+
+                    <div class="col-xl-3 col-md-6">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <p class="text-muted mb-1">Approval Rules</p>
-                                        <h3 class="mb-0">{{ approval_rules_count }}</h3>
+                                        <h3 class="mb-0">8</h3>
                                         <small class="text-muted">Active rules</small>
                                     </div>
-                                    <div class="stat-icon" style="background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                                    <div class="stat-icon"
+                                        style="background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
                                         <i class="bi bi-diagram-3"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-md-6">
+
+                    <div class="col-xl-6 col-md-12">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <p class="text-muted mb-2">Top Spender</p>
-                                {% if top_spenders %}
-                                    <h4 class="mb-1">{{ top_spenders.0.employee__first_name }} {{ top_spenders.0.employee__last_name }}</h4>
-                                    <small class="text-primary"><i class="bi bi-cash"></i> {{ top_spenders.0.total_spent|floatformat:2 }} {{ company.currency }}</small>
-                                {% else %}
-                                    <p class="text-muted">No expenses yet</p>
-                                {% endif %}
+                                <h4 class="mb-1">Sarah Johnson</h4>
+                                <small class="text-primary"><i class="bi bi-cash"></i> 3,450.75 USD</small>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row g-4">
+                    <!-- Pending Approvals Section -->
+                    <div class="row mt-4" id="approvalsSection">
+                        <div class="col-12">
+                            <div class="card table-card">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Your Pending Approvals</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Employee</th>
+                                                    <th>Description</th>
+                                                    <th>Amount</th>
+                                                    <th>Date</th>
+                                                    <th>Category</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Sarah Johnson</td>
+                                                    <td>Client meeting travel expenses</td>
+                                                    <td class="fw-semibold">450.00 USD</td>
+                                                    <td>Mar 15, 2023</td>
+                                                    <td><span class="badge bg-light text-dark">Travel</span></td>
+                                                    <td>
+                                                        <div class="action-buttons">
+                                                            <button class="btn btn-sm btn-success me-1"
+                                                                onclick="approveExpense(101)">
+                                                                <i class="bi bi-check"></i> Approve
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger"
+                                                                onclick="showRejectModal(101)">
+                                                                <i class="bi bi-x"></i> Reject
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Sarah Johnson</td>
+                                                    <td>Client meeting travel expenses</td>
+                                                    <td class="fw-semibold">450.00 USD</td>
+                                                    <td>Mar 15, 2023</td>
+                                                    <td><span class="badge bg-light text-dark">Travel</span></td>
+                                                    <td>
+                                                        <div class="action-buttons">
+                                                            <button class="btn btn-sm btn-success me-1"
+                                                                onclick="approveExpense(101)">
+                                                                <i class="bi bi-check"></i> Approve
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger"
+                                                                onclick="showRejectModal(101)">
+                                                                <i class="bi bi-x"></i> Reject
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Sarah Johnson</td>
+                                                    <td>Client meeting travel expenses</td>
+                                                    <td class="fw-semibold">450.00 USD</td>
+                                                    <td>Mar 15, 2023</td>
+                                                    <td><span class="badge bg-light text-dark">Travel</span></td>
+                                                    <td>
+                                                        <div class="action-buttons">
+                                                            <button class="btn btn-sm btn-success me-1"
+                                                                onclick="approveExpense(101)">
+                                                                <i class="bi bi-check"></i> Approve
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger"
+                                                                onclick="showRejectModal(101)">
+                                                                <i class="bi bi-x"></i> Reject
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- All Expenses Table -->
-                    <div class="col-md-8" id="expensesSection">
+                    <div class="col-lg-8" id="expensesSection">
                         <div class="card table-card">
-                            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                            <div
+                                class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
                                 <h5 class="mb-0">All Expenses</h5>
                                 <div>
-                                    <span class="badge filter-badge bg-secondary me-1" onclick="filterExpenses('all')">All</span>
-                                    <span class="badge filter-badge bg-warning me-1" onclick="filterExpenses('pending')">Pending</span>
-                                    <span class="badge filter-badge bg-success me-1" onclick="filterExpenses('approved')">Approved</span>
-                                    <span class="badge filter-badge bg-danger" onclick="filterExpenses('rejected')">Rejected</span>
+                                    <span class="badge filter-badge bg-primary me-1"
+                                        onclick="filterExpenses('all')">All</span>
+                                    <span class="badge filter-badge bg-secondary me-1"
+                                        onclick="filterExpenses('pending')">Pending</span>
+                                    <span class="badge filter-badge bg-secondary me-1"
+                                        onclick="filterExpenses('approved')">Approved</span>
+                                    <span class="badge filter-badge bg-secondary"
+                                        onclick="filterExpenses('rejected')">Rejected</span>
                                 </div>
                             </div>
                             <div class="card-body p-0">
-                                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                <div class="table-responsive">
                                     <table class="table table-hover mb-0">
-                                        <thead class="table-light sticky-top">
+                                        <thead class="table-light">
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Employee</th>
@@ -353,91 +610,162 @@
                                             </tr>
                                         </thead>
                                         <tbody id="expensesTableBody">
-                                            {% for expense in recent_expenses %}
-                                            <tr class="expense-row" data-status="{{ expense.status }}">
-                                                <td><strong>#{{ expense.id }}</strong></td>
+                                            <tr class="expense-row" data-status="pending">
+                                                <td><strong>#101</strong></td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        <div class="user-avatar me-2" style="width: 32px; height: 32px; font-size: 14px;">
-                                                            {{ expense.employee.first_name.0 }}{{ expense.employee.last_name.0 }}
+                                                        <div class="user-avatar me-2"
+                                                            style="width: 32px; height: 32px; font-size: 14px;">
+                                                            SJ
                                                         </div>
                                                         <div>
-                                                            <div class="fw-semibold">{{ expense.employee.get_full_name }}</div>
-                                                            <small class="text-muted">{{ expense.employee.email }}</small>
+                                                            <div class="fw-semibold">Sarah Johnson</div>
+                                                            <small class="text-muted">sarah@example.com</small>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <span class="badge bg-light text-dark">
-                                                        <i class="bi bi-tag"></i> {{ expense.get_category_display }}
+                                                        <i class="bi bi-tag"></i> Travel
                                                     </span>
                                                 </td>
-                                                <td class="fw-semibold">{{ expense.amount }} {{ expense.currency }}</td>
-                                                <td>{{ expense.expense_date|date:"M d, Y" }}</td>
+                                                <td class="fw-semibold">450.00 USD</td>
+                                                <td>Mar 15, 2023</td>
                                                 <td>
-                                                    <span class="badge badge-{{ expense.status }}">
-                                                        {{ expense.get_status_display }}
+                                                    <span class="badge badge-pending">
+                                                        Pending
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <button class="btn btn-sm btn-outline-secondary btn-action" onclick="viewExpenseDetails({{ expense.id }})" title="View Details">
-                                                        <i class="bi bi-eye"></i>
-                                                    </button>
-                                                    {% if expense.status == 'pending' %}
-                                                    <button class="btn btn-sm btn-success btn-action" onclick="approveExpense({{ expense.id }})" title="Approve">
-                                                        <i class="bi bi-check"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger btn-action" onclick="showRejectModal({{ expense.id }})" title="Reject">
-                                                        <i class="bi bi-x"></i>
-                                                    </button>
-                                                    {% endif %}
+                                                    <div class="action-buttons">                          
+                                                        <button class="btn btn-sm btn-success btn-action"
+                                                            onclick="approveExpense(101)" title="Approve">
+                                                            <i class="bi bi-check"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-danger btn-action"
+                                                            onclick="showRejectModal(101)" title="Reject">
+                                                            <i class="bi bi-x"></i>
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
-                                            {% empty %}
-                                            <tr>
-                                                <td colspan="7" class="text-center py-4 text-muted">
-                                                    <i class="bi bi-inbox" style="font-size: 48px;"></i>
-                                                    <p class="mt-2">No expenses yet</p>
+                                            <tr class="expense-row" data-status="approved">
+                                                <td><strong>#100</strong></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="user-avatar me-2"
+                                                            style="width: 32px; height: 32px; font-size: 14px;">
+                                                            MJ
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-semibold">Mike Johnson</div>
+                                                            <small class="text-muted">mike@example.com</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="bi bi-tag"></i> Equipment
+                                                    </span>
+                                                </td>
+                                                <td class="fw-semibold">1,250.00 USD</td>
+                                                <td>Mar 12, 2023</td>
+                                                <td>
+                                                    <span class="badge badge-approved">
+                                                        Approved
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="action-buttons">
+                                                        
+                                                    </div>
                                                 </td>
                                             </tr>
-                                            {% endfor %}
+                                            <tr class="expense-row" data-status="rejected">
+                                                <td><strong>#99</strong></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="user-avatar me-2"
+                                                            style="width: 32px; height: 32px; font-size: 14px;">
+                                                            EM
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-semibold">Emma Martinez</div>
+                                                            <small class="text-muted">emma@example.com</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="bi bi-tag"></i> Meals
+                                                    </span>
+                                                </td>
+                                                <td class="fw-semibold">85.50 USD</td>
+                                                <td>Mar 10, 2023</td>
+                                                <td>
+                                                    <span class="badge badge-rejected">
+                                                        Rejected
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="action-buttons">
+                                                        
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Right Sidebar -->
-                    <div class="col-md-4">
+                    <div class="col-lg-4">
                         <!-- Expense by Category -->
                         <div class="card table-card mb-4">
                             <div class="card-header bg-white border-0 py-3">
                                 <h5 class="mb-0">Expenses by Category</h5>
                             </div>
                             <div class="card-body">
-                                {% for stat in category_stats %}
                                 <div class="mb-3">
                                     <div class="d-flex justify-content-between mb-1">
-                                        <span>{{ stat.category|title }}</span>
-                                        <span class="fw-semibold">{{ stat.total|floatformat:0 }} {{ company.currency }}</span>
+                                        <span>Travel</span>
+                                        <span class="fw-semibold">5,420 USD</span>
                                     </div>
                                     <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar bg-primary" role="progressbar" style="width: {% widthratio stat.total total_amount 100 %}%;" aria-valuenow="{{ stat.total }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: 35%;"
+                                            aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
-                                    <small class="text-muted">{{ stat.count }} expense(s)</small>
+                                    <small class="text-muted">42 expense(s)</small>
                                 </div>
-                                {% empty %}
-                                <div class="text-center py-4 text-muted">
-                                    <i class="bi bi-pie-chart" style="font-size: 48px;"></i>
-                                    <p class="mt-2">No approved expenses yet</p>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Equipment</span>
+                                        <span class="fw-semibold">4,150 USD</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 27%;"
+                                            aria-valuenow="27" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-muted">18 expense(s)</small>
                                 </div>
-                                {% endfor %}
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Meals</span>
+                                        <span class="fw-semibold">2,850 USD</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 18%;"
+                                            aria-valuenow="18" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-muted">65 expense(s)</small>
+                                </div>
                             </div>
                         </div>
-                        
+
                         <!-- Quick Actions -->
-                        <div class="card table-card">
+                        <!-- <div class="card table-card">
                             <div class="card-header bg-white border-0 py-3">
                                 <h5 class="mb-0">Quick Actions</h5>
                             </div>
@@ -457,61 +785,15 @@
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
-                
-                <!-- Pending Approvals Section -->
-                {% if pending_approvals %}
-                <div class="row mt-4" id="approvalsSection">
-                    <div class="col-12">
-                        <div class="card table-card">
-                            <div class="card-header bg-white border-0 py-3">
-                                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Your Pending Approvals</h5>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Employee</th>
-                                                <th>Description</th>
-                                                <th>Amount</th>
-                                                <th>Date</th>
-                                                <th>Category</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for approval in pending_approvals %}
-                                            <tr>
-                                                <td>{{ approval.expense.employee.get_full_name }}</td>
-                                                <td>{{ approval.expense.description|truncatewords:10 }}</td>
-                                                <td class="fw-semibold">{{ approval.expense.amount }} {{ approval.expense.currency }}</td>
-                                                <td>{{ approval.expense.expense_date|date:"M d, Y" }}</td>
-                                                <td><span class="badge bg-light text-dark">{{ approval.expense.get_category_display }}</span></td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-success me-1" onclick="approveExpense({{ approval.expense.id }})">
-                                                        <i class="bi bi-check"></i> Approve
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="showRejectModal({{ approval.expense.id }})">
-                                                        <i class="bi bi-x"></i> Reject
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
+
+
             </div>
         </div>
     </div>
-    
+
     <!-- Add User Modal -->
     <div class="modal fade" id="addUserModal" tabindex="-1">
         <div class="modal-dialog">
@@ -532,12 +814,12 @@
                                 <input type="text" class="form-control" name="last_name" required>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Email *</label>
                             <input type="email" class="form-control" name="email" required>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Username *</label>
@@ -545,15 +827,16 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Password *</label>
-                                <input type="password" class="form-control" name="password" value="password123" required>
+                                <input type="password" class="form-control" name="password" value="password123"
+                                    required>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Phone</label>
                             <input type="text" class="form-control" name="phone">
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Role *</label>
@@ -567,11 +850,8 @@
                                 <label class="form-label">Manager</label>
                                 <select class="form-select" name="manager_id">
                                     <option value="">No Manager</option>
-                                    {% for user in all_users %}
-                                        {% if user.role in 'manager,admin' %}
-                                        <option value="{{ user.id }}">{{ user.get_full_name }} ({{ user.get_role_display }})</option>
-                                        {% endif %}
-                                    {% endfor %}
+                                    <option value="1">John Doe (Admin)</option>
+                                    <option value="2">Sarah Johnson (Manager)</option>
                                 </select>
                             </div>
                         </div>
@@ -586,78 +866,13 @@
             </div>
         </div>
     </div>
-    
-    <!-- Edit User Modal -->
-    <div class="modal fade" id="editUserModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-pencil"></i> Edit User</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editUserForm">
-                        <input type="hidden" name="user_id" id="edit_user_id">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">First Name *</label>
-                                <input type="text" class="form-control" name="first_name" id="edit_first_name" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Last Name *</label>
-                                <input type="text" class="form-control" name="last_name" id="edit_last_name" required>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Email *</label>
-                            <input type="email" class="form-control" name="email" id="edit_email" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Phone</label>
-                            <input type="text" class="form-control" name="phone" id="edit_phone">
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Role *</label>
-                                <select class="form-select" name="role" id="edit_role" required>
-                                    <option value="employee">Employee</option>
-                                    <option value="manager">Manager</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Manager</label>
-                                <select class="form-select" name="manager_id" id="edit_manager_id">
-                                    <option value="">No Manager</option>
-                                    {% for user in all_users %}
-                                        {% if user.role in 'manager,admin' %}
-                                        <option value="{{ user.id }}">{{ user.get_full_name }}</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="submitEditUser()">
-                        <i class="bi bi-save"></i> Save Changes
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
+
     <!-- All Users Modal -->
     <div class="modal fade" id="usersModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-people"></i> All Users ({{ total_users }})</h5>
+                    <h5 class="modal-title"><i class="bi bi-people"></i> All Users (15)</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -673,38 +888,68 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for user_item in all_users %}
-                                <tr id="user-row-{{ user_item.id }}">
+                                <tr id="user-row-1">
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <div class="user-avatar me-2" style="width: 32px; height: 32px; font-size: 14px;">
-                                                {{ user_item.first_name.0 }}{{ user_item.last_name.0 }}
+                                            <div class="user-avatar me-2"
+                                                style="width: 32px; height: 32px; font-size: 14px;">
+                                                JD
                                             </div>
                                             <div>
-                                                <div class="fw-semibold">{{ user_item.get_full_name }}</div>
-                                                <small class="text-muted">@{{ user_item.username }}</small>
+                                                <div class="fw-semibold">John Doe</div>
+                                                <small class="text-muted">@johndoe</small>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{{ user_item.email }}</td>
+                                    <td>john@example.com</td>
                                     <td>
-                                        <span class="badge {% if user_item.role == 'admin' %}bg-danger{% elif user_item.role == 'manager' %}bg-primary{% else %}bg-secondary{% endif %}">
-                                            {{ user_item.get_role_display }}
+                                        <span class="badge bg-danger">
+                                            Admin
                                         </span>
                                     </td>
-                                    <td>{{ user_item.manager.get_full_name|default:"N/A" }}</td>
+                                    <td>N/A</td>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-primary btn-action" onclick="editUser({{ user_item.id }})" title="Edit">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        {% if user_item.id != user.id %}
-                                        <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteUser({{ user_item.id }}, '{{ user_item.get_full_name }}')" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                        {% endif %}
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-outline-primary btn-action"
+                                                onclick="editUser(1)" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
-                                {% endfor %}
+                                <tr id="user-row-2">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="user-avatar me-2"
+                                                style="width: 32px; height: 32px; font-size: 14px;">
+                                                SJ
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">Sarah Johnson</div>
+                                                <small class="text-muted">@sarahj</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>sarah@example.com</td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            Manager
+                                        </span>
+                                    </td>
+                                    <td>John Doe</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-outline-primary btn-action"
+                                                onclick="editUser(2)" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger btn-action"
+                                                onclick="deleteUser(2, 'Sarah Johnson')" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -712,7 +957,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Reject Expense Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1">
         <div class="modal-dialog">
@@ -725,10 +970,12 @@
                     <input type="hidden" id="reject_expense_id">
                     <div class="mb-3">
                         <label class="form-label">Reason for Rejection *</label>
-                        <textarea class="form-control" id="reject_comments" rows="4" placeholder="Please provide a reason for rejecting this expense..." required></textarea>
+                        <textarea class="form-control" id="reject_comments" rows="4"
+                            placeholder="Please provide a reason for rejecting this expense..." required></textarea>
                     </div>
                     <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i> This action cannot be undone. The employee will be notified.
+                        <i class="bi bi-exclamation-triangle"></i> This action cannot be undone. The employee will be
+                        notified.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -751,7 +998,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> Approval rules define how expenses are reviewed and approved. Coming soon!
+                        <i class="bi bi-info-circle"></i> Approval rules define how expenses are reviewed and approved.
                     </div>
                     <button class="btn btn-primary">
                         <i class="bi bi-plus-circle"></i> Create New Rule
@@ -760,223 +1007,170 @@
             </div>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Get CSRF token
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        const csrftoken = getCookie('csrftoken');
-        
-        // Show toast notification
-        function showToast(message, type = 'success') {
-            const toastHTML = `
-                <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                    </div>
-                </div>
-            `;
-            const toastContainer = document.querySelector('.toast-container');
-            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-            const toastElement = toastContainer.lastElementChild;
-            const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
-            toast.show();
-            toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
-        }
-        
-        // Submit Add User
-        function submitAddUser() {
-            const form = document.getElementById('addUserForm');
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            
-            fetch('/add-user/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
-                    form.reset();
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showToast(data.error, 'danger');
-                }
-            })
-            .catch(error => {
-                showToast('An error occurred', 'danger');
-            });
-        }
-        
-        // Edit User
-        function editUser(userId) {
-            fetch(`/get-user/${userId}/`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('edit_user_id').value = data.user.id;
-                    document.getElementById('edit_first_name').value = data.user.first_name;
-                    document.getElementById('edit_last_name').value = data.user.last_name;
-                    document.getElementById('edit_email').value = data.user.email;
-                    document.getElementById('edit_phone').value = data.user.phone;
-                    document.getElementById('edit_role').value = data.user.role;
-                    document.getElementById('edit_manager_id').value = data.user.manager_id;
-                    
-                    bootstrap.Modal.getInstance(document.getElementById('usersModal')).hide();
-                    new bootstrap.Modal(document.getElementById('editUserModal')).show();
-                }
-            });
-        }
-        
-        // Submit Edit User
-        function submitEditUser() {
-            const userId = document.getElementById('edit_user_id').value;
-            const form = document.getElementById('editUserForm');
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            
-            fetch(`/edit-user/${userId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showToast(data.error, 'danger');
-                }
-            });
-        }
-        
-        // Delete User
-        function deleteUser(userId, userName) {
-            if (confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
-                fetch(`/delete-user/${userId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrftoken
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast(data.message, 'success');
-                        document.getElementById(`user-row-${userId}`).remove();
-                    } else {
-                        showToast(data.error, 'danger');
-                    }
-                });
+        // Mobile sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('show');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+        });
+
+        document.getElementById('sidebarOverlay').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.remove('show');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+        });
+
+        // Scroll to section function
+        function scrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+            // Close sidebar on mobile after clicking
+            if (window.innerWidth < 992) {
+                document.getElementById('sidebar').classList.remove('show');
+                document.getElementById('sidebarOverlay').classList.remove('show');
             }
         }
-        
-        // Approve Expense
-        function approveExpense(expenseId) {
-            if (confirm('Are you sure you want to approve this expense?')) {
-                fetch(`/approve-expense/${expenseId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrftoken
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast(data.message, 'success');
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        showToast(data.error, 'danger');
-                    }
-                });
-            }
-        }
-        
-        // Show Reject Modal
-        function showRejectModal(expenseId) {
-            document.getElementById('reject_expense_id').value = expenseId;
-            document.getElementById('reject_comments').value = '';
-            new bootstrap.Modal(document.getElementById('rejectModal')).show();
-        }
-        
-        // Submit Reject Expense
-        function submitRejectExpense() {
-            const expenseId = document.getElementById('reject_expense_id').value;
-            const comments = document.getElementById('reject_comments').value;
-            
-            if (!comments.trim()) {
-                alert('Please provide a reason for rejection');
-                return;
-            }
-            
-            fetch(`/reject-expense/${expenseId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ comments: comments })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message, 'warning');
-                    bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showToast(data.error, 'danger');
-                }
-            });
-        }
-        
-        // Filter Expenses
+
+        // Filter expenses by status
         function filterExpenses(status) {
             const rows = document.querySelectorAll('.expense-row');
             rows.forEach(row => {
-                if (status === 'all' || row.dataset.status === status) {
+                if (status === 'all' || row.getAttribute('data-status') === status) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
                 }
             });
+
+            // Update active filter badge
+            document.querySelectorAll('.filter-badge').forEach(badge => {
+                badge.classList.remove('bg-primary');
+                badge.classList.add('bg-secondary');
+            });
+
+            event.target.classList.remove('bg-secondary');
+            event.target.classList.add('bg-primary');
         }
-        
-        // Scroll to section
-        function scrollToSection(sectionId) {
-            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-bg-${type} border-0`;
+            toast.id = toastId;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+
+            // Remove toast from DOM after it's hidden
+            toast.addEventListener('hidden.bs.toast', function () {
+                toast.remove();
+            });
         }
-        
-        // View Expense Details (placeholder)
+
+        // Show reject modal
+        function showRejectModal(expenseId) {
+            document.getElementById('reject_expense_id').value = expenseId;
+            const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+            rejectModal.show();
+        }
+
+        // Submit reject expense
+        function submitRejectExpense() {
+            const expenseId = document.getElementById('reject_expense_id').value;
+            const comments = document.getElementById('reject_comments').value;
+
+            if (!comments.trim()) {
+                alert('Please provide a reason for rejection.');
+                return;
+            }
+
+            // Simulate API call
+            setTimeout(() => {
+                showToast(`Expense #${expenseId} has been rejected.`, 'danger');
+                document.getElementById('reject_comments').value = '';
+                const rejectModal = bootstrap.Modal.getInstance(document.getElementById('rejectModal'));
+                rejectModal.hide();
+
+                // Update UI
+                const row = document.querySelector(`tr[data-expense-id="${expenseId}"]`);
+                if (row) {
+                    row.querySelector('.badge').className = 'badge badge-rejected';
+                    row.querySelector('.badge').textContent = 'Rejected';
+                    row.querySelector('.btn-success, .btn-danger').remove();
+                }
+            }, 500);
+        }
+
+        // Approve expense
+        function approveExpense(expenseId) {
+            // Simulate API call
+            setTimeout(() => {
+                showToast(`Expense #${expenseId} has been approved.`, 'success');
+
+                // Update UI
+                const row = document.querySelector(`tr[data-expense-id="${expenseId}"]`);
+                if (row) {
+                    row.querySelector('.badge').className = 'badge badge-approved';
+                    row.querySelector('.badge').textContent = 'Approved';
+                    row.querySelector('.btn-success, .btn-danger').remove();
+                }
+            }, 500);
+        }
+
+        // View expense details
         function viewExpenseDetails(expenseId) {
-            alert('Expense details view - Coming soon!');
+            alert(`Viewing details for expense #${expenseId}`);
+            // In a real application, this would open a modal with detailed expense information
+        }
+
+        // Add new user
+        function submitAddUser() {
+            const form = document.getElementById('addUserForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Simulate API call
+            setTimeout(() => {
+                showToast('New user added successfully!', 'success');
+                const addUserModal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                addUserModal.hide();
+                form.reset();
+            }, 500);
+        }
+
+        // Edit user
+        function editUser(userId) {
+            // In a real application, this would fetch user data and populate the form
+            alert(`Edit user #${userId} functionality would go here.`);
+        }
+
+        // Delete user
+        function deleteUser(userId, userName) {
+            if (confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+                // Simulate API call
+                setTimeout(() => {
+                    showToast(`User "${userName}" has been deleted.`, 'warning');
+                    document.getElementById(`user-row-${userId}`).remove();
+                }, 500);
+            }
         }
     </script>
 </body>
+
 </html>

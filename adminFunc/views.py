@@ -13,3 +13,13 @@ def admin_login(request):
 def admin_dashboard(request):
     return render(request, 'adminFunc/adminDashboard.html')
 
+<<<<<<< HEAD
+=======
+
+# # Logout view
+# @never_cache
+# def admin_logout(request):
+#     logout(request)
+#     messages.success(request, 'You have been logged out successfully.')
+#     return redirect('admin:login')
+>>>>>>> e0f140f314cc50ecdc285a5ba0edcb1bf980c335

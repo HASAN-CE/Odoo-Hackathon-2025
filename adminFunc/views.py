@@ -6,7 +6,11 @@ from django.contrib import messages
 from django.views.decorators.cache import never_cache
 
 
+@never_cache
+def admin_login(request):
+    return render(request, 'adminFunc/login.html')
 
+@never_cache
 def admin_dashboard(request):
     return render(request, 'adminFunc/adminDashboard.html')
 

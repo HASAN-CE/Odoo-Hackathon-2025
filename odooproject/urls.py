@@ -7,7 +7,7 @@ from django.shortcuts import redirect
 urlpatterns = [
     path("django-admin/", django_admin.site.urls),  # Django's own admin
     path("admin/", include("adminFunc.urls")),  # Your custom admin
-    # path("", lambda request: redirect("adminFunc:login")),  # root → login
+    path("", lambda request: redirect("adminFunc:login")),  # root → login
 ]
 
 if settings.DEBUG:

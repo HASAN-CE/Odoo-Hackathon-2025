@@ -141,9 +141,9 @@
                 </div>
                 
                 <nav class="nav flex-column">
-                    <a class="nav-link active" href="{% url 'admin_dashboard' %}">
+                    {% comment %} <a class="nav-link active" href="{% url 'admin_dashboard' %}">
                         <i class="bi bi-speedometer2"></i> Dashboard
-                    </a>
+                    </a> {% endcomment %}
                     <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#usersModal">
                         <i class="bi bi-people"></i> User Management <span class="badge bg-light text-dark ms-2">{{ total_users }}</span>
                     </a>
@@ -173,7 +173,7 @@
                             <div class="small">{{ user.get_full_name }}</div>
                             <div class="text-white-50" style="font-size: 12px;">Admin</div>
                         </div>
-                        <a href="{% url 'logout' %}" class="text-white" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
+                        {% comment %} <a href="{% url 'logout' %}" class="text-white" title="Logout"><i class="bi bi-box-arrow-right"></i></a> {% endcomment %}
                     </div>
                 </div>
             </div>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Authentication</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        .form-container {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.85);
+        }
+        .tab-active {
+            position: relative;
+        }
+        .tab-active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            border-radius: 3px;
+        }
+        .input-focus:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        .btn-glow:hover {
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .password-toggle {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .password-toggle:hover {
+            color: #4f46e5;
+        }
+        .form-section-title {
+            position: relative;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+        .form-section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-4xl w-full form-container rounded-2xl shadow-xl overflow-hidden border border-white/50">
+        <!-- Header with Tabs -->
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
+            <h1 class="text-2xl font-bold text-center mb-2">Welcome</h1>
+            <p class="text-center text-indigo-100 mb-6">Sign in to your account or create a new one</p>
+            
+            <div class="flex bg-white/20 rounded-xl p-1 backdrop-blur-sm max-w-md mx-auto">
+                <button id="login-tab" class="flex-1 py-3 text-center font-medium rounded-xl transition-all duration-300 tab-active">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                </button>
+                <button id="signup-tab" class="flex-1 py-3 text-center font-medium rounded-xl transition-all duration-300">
+                    <i class="fas fa-user-plus mr-2"></i>Sign Up
+                </button>
+            </div>
+        </div>
+        
+        <!-- Forms Container -->
+        <div class="p-8">
+            <!-- Login Form -->
+            <div id="login-form" class="fade-in max-w-md mx-auto">
+                <form id="loginForm">
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="login-email">
+                            <i class="fas fa-envelope mr-2 text-indigo-500"></i>Email / Username
+                        </label>
+                        <input id="login-email" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none input-focus transition-all duration-300" placeholder="Enter your email or username" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="login-password">
+                            <i class="fas fa-lock mr-2 text-indigo-500"></i>Password
+                        </label>
+                        <div class="relative">
+                            <input id="login-password" type="password" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none input-focus transition-all duration-300 pr-10" placeholder="Enter your password" required>
+                            <span class="password-toggle absolute right-3 top-3.5 text-gray-400">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center">
+                            <input id="remember-me" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                                Remember me
+                            </label>
+                        </div>
+                        <a href="#" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors duration-300">
+                            Forgot Password?
+                        </a>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 px-4 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium btn-glow">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Signup Form -->
+            <div id="signup-form" class="hidden fade-in">
+                <form id="signupForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Personal Information Column -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 form-section-title">Personal Information</h3>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="full-name">
+                                    <i class="fas fa-user mr-2 text-indigo-500"></i>Full Name
+                                </label>
+                                <input id="full-name" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none input-focus transition-all duration-300" placeholder="Enter your full name" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="email">
+                                    <i class="fas fa-envelope mr-2 text-indigo-500"></i>Email
+                                </label>
+                                <input id="email" type="email" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none input-focus transition-all duration-300" placeholder="Enter your email" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="password">
+                                    <i class="fas fa-lock mr-2 text-indigo-500"></i>Password
+                                </label>
+                                <div class="relative">
+                                    <input id="password" type="password" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none input-focus transition-all duration-300 pr-10" placeholder="Create a password" required>
+                                    <span class="password-toggle absolute right-3 top-3.5 text-gray-400">
+                                        <i class="fas fa-eye"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="confirm-password">
+                                    <i class="fas fa-lock mr-2 text-indigo-500"></i>Confirm Password
+                                </label>
+                                <div class="relative">
+                                    <input id="confirm-password" type="password" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none input-focus transition-all duration-300 pr-10" placeholder="Confirm your password" required>
+                                    <span class="password-toggle absolute right-3 top-3.5 text-gray-400">
+                                        <i class="fas fa-eye"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Company Information Column -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 form-section-title">Company Information</h3>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="company-name">
+                                    <i class="fas fa-building mr-2 text-indigo-500"></i>Company Name
+                                </label>
+                                <input id="company-name" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none input-focus transition-all duration-300" placeholder="Enter your company name" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="country">
+                                    <i class="fas fa-globe mr-2 text-indigo-500"></i>Company Country
+                                </label>
+                                <select id="country" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none input-focus transition-all duration-300" required>
+                                    <option value="">Select a country</option>
+                                </select>
+                            </div>
+                            <div class="mb-6">
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="currency">
+                                    <i class="fas fa-money-bill-wave mr-2 text-indigo-500"></i>Default Currency
+                                </label>
+                                <input id="currency" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none input-focus transition-all duration-300 bg-gray-50" placeholder="Currency will auto-fill" readonly>
+                            </div>
+                            
+                            <!-- Role Information -->
+                            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mt-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mt-1">
+                                        <i class="fas fa-crown text-amber-500 text-lg"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h4 class="text-sm font-semibold text-indigo-800">Administrator Role</h4>
+                                        <p class="text-xs text-indigo-600 mt-1">As the first user, you will be assigned the Admin role with full system access.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Terms and Submit Button -->
+                    <div class="mt-8 pt-6 border-t border-gray-200">
+                        <div class="mb-6 flex items-start">
+                            <input id="terms" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-1" required>
+                            <label for="terms" class="ml-2 block text-sm text-gray-700">
+                                I agree to the <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Terms of Service</a> and <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Privacy Policy</a>. I understand that as the first user, I will be the Administrator for my company account.
+                            </label>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 px-4 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium btn-glow">
+                            <i class="fas fa-user-plus mr-2"></i>Create Company Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const loginTab = document.getElementById('login-tab');
+        const signupTab = document.getElementById('signup-tab');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const countrySelect = document.getElementById('country');
+        const currencyInput = document.getElementById('currency');
+        const passwordToggles = document.querySelectorAll('.password-toggle');
+        
+        // Tab switching functionality
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('tab-active');
+            signupTab.classList.remove('tab-active');
+            loginForm.classList.remove('hidden');
+            signupForm.classList.add('hidden');
+        });
+        
+        signupTab.addEventListener('click', () => {
+            signupTab.classList.add('tab-active');
+            loginTab.classList.remove('tab-active');
+            signupForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        });
+        
+        // Password visibility toggle
+        passwordToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+        
+        // Fetch countries and populate dropdown
+        async function loadCountries() {
+            try {
+                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,currencies');
+                const countries = await response.json();
+                
+                // Sort countries alphabetically
+                countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
+                
+                // Populate dropdown
+                countries.forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.name.common;
+                    option.textContent = country.name.common;
+                    option.setAttribute('data-currency', Object.keys(country.currencies)[0]);
+                    countrySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading countries:', error);
+                // Fallback to a few common countries if API fails
+                const fallbackCountries = [
+                    { name: 'United States', currency: 'USD' },
+                    { name: 'United Kingdom', currency: 'GBP' },
+                    { name: 'Canada', currency: 'CAD' },
+                    { name: 'Australia', currency: 'AUD' },
+                    { name: 'Germany', currency: 'EUR' },
+                    { name: 'Japan', currency: 'JPY' },
+                    { name: 'India', currency: 'INR' },
+                    { name: 'France', currency: 'EUR' },
+                    { name: 'Brazil', currency: 'BRL' },
+                    { name: 'China', currency: 'CNY' }
+                ];
+                
+                fallbackCountries.forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.name;
+                    option.textContent = country.name;
+                    option.setAttribute('data-currency', country.currency);
+                    countrySelect.appendChild(option);
+                });
+            }
+        }
+        
+        // Auto-fill currency when country is selected
+        countrySelect.addEventListener('change', () => {
+            const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+            const currencyCode = selectedOption.getAttribute('data-currency');
+            if (currencyCode) {
+                currencyInput.value = currencyCode;
+            } else {
+                currencyInput.value = '';
+            }
+        });
+        
+        // Form submission handlers
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+            
+            // In a real app, you would send this to your backend
+            console.log('Login attempt:', { email, password, rememberMe });
+            
+            // Show success message
+            alert('Login successful! In a real application, you would be redirected to your dashboard.');
+        });
+        
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('full-name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const companyName = document.getElementById('company-name').value;
+            const country = document.getElementById('country').value;
+            const currency = document.getElementById('currency').value;
+            const terms = document.getElementById('terms').checked;
+            
+            // Basic validation
+            if (password !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+            
+            if (!terms) {
+                alert('Please agree to the Terms of Service and Privacy Policy');
+                return;
+            }
+            
+            // In a real app, you would send this to your backend
+            console.log('Signup attempt:', { 
+                fullName, 
+                email, 
+                password, 
+                companyName, 
+                country, 
+                currency,
+                role: 'Admin' 
+            });
+            
+            // Show success message
+            alert('Company account created successfully! You can now log in with your credentials.');
+        });
+        
+        // Initialize the page
+        loadCountries();
+    </script>
+</body>
+</html>

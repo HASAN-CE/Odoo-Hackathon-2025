@@ -222,156 +222,275 @@
         </div>
     </div>
 
-    <script>
-        // DOM Elements
-        const loginTab = document.getElementById('login-tab');
-        const signupTab = document.getElementById('signup-tab');
-        const loginForm = document.getElementById('login-form');
-        const signupForm = document.getElementById('signup-form');
-        const countrySelect = document.getElementById('country');
-        const currencyInput = document.getElementById('currency');
-        const passwordToggles = document.querySelectorAll('.password-toggle');
-        
-        // Tab switching functionality
-        loginTab.addEventListener('click', () => {
-            loginTab.classList.add('tab-active');
-            signupTab.classList.remove('tab-active');
-            loginForm.classList.remove('hidden');
-            signupForm.classList.add('hidden');
+<script>
+    // DOM Elements
+    const loginTab = document.getElementById('login-tab');
+    const signupTab = document.getElementById('signup-tab');
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const countrySelect = document.getElementById('country');
+    const currencyInput = document.getElementById('currency');
+    const passwordToggles = document.querySelectorAll('.password-toggle');
+    
+    // Tab switching functionality
+    loginTab.addEventListener('click', () => {
+        loginTab.classList.add('tab-active');
+        signupTab.classList.remove('tab-active');
+        loginForm.classList.remove('hidden');
+        signupForm.classList.add('hidden');
+    });
+    
+    signupTab.addEventListener('click', () => {
+        signupTab.classList.add('tab-active');
+        loginTab.classList.remove('tab-active');
+        signupForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+    });
+    
+    // Password visibility toggle
+    passwordToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const input = this.previousElementSibling;
+            const icon = this.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
         });
-        
-        signupTab.addEventListener('click', () => {
-            signupTab.classList.add('tab-active');
-            loginTab.classList.remove('tab-active');
-            signupForm.classList.remove('hidden');
-            loginForm.classList.add('hidden');
-        });
-        
-        // Password visibility toggle
-        passwordToggles.forEach(toggle => {
-            toggle.addEventListener('click', function() {
-                const input = this.previousElementSibling;
-                const icon = this.querySelector('i');
-                
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                } else {
-                    input.type = 'password';
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                }
+    });
+    
+    // Fetch countries and populate dropdown
+    async function loadCountries() {
+        try {
+            const response = await fetch('https://restcountries.com/v3.1/all?fields=name,currencies');
+            const countries = await response.json();
+            
+            // Sort countries alphabetically
+            countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
+            
+            // Populate dropdown
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.name.common;
+                option.textContent = country.name.common;
+                option.setAttribute('data-currency', Object.keys(country.currencies)[0]);
+                countrySelect.appendChild(option);
             });
-        });
-        
-        // Fetch countries and populate dropdown
-        async function loadCountries() {
-            try {
-                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,currencies');
-                const countries = await response.json();
-                
-                // Sort countries alphabetically
-                countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
-                
-                // Populate dropdown
-                countries.forEach(country => {
-                    const option = document.createElement('option');
-                    option.value = country.name.common;
-                    option.textContent = country.name.common;
-                    option.setAttribute('data-currency', Object.keys(country.currencies)[0]);
-                    countrySelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading countries:', error);
-                // Fallback to a few common countries if API fails
-                const fallbackCountries = [
-                    { name: 'United States', currency: 'USD' },
-                    { name: 'United Kingdom', currency: 'GBP' },
-                    { name: 'Canada', currency: 'CAD' },
-                    { name: 'Australia', currency: 'AUD' },
-                    { name: 'Germany', currency: 'EUR' },
-                    { name: 'Japan', currency: 'JPY' },
-                    { name: 'India', currency: 'INR' },
-                    { name: 'France', currency: 'EUR' },
-                    { name: 'Brazil', currency: 'BRL' },
-                    { name: 'China', currency: 'CNY' }
-                ];
-                
-                fallbackCountries.forEach(country => {
-                    const option = document.createElement('option');
-                    option.value = country.name;
-                    option.textContent = country.name;
-                    option.setAttribute('data-currency', country.currency);
-                    countrySelect.appendChild(option);
-                });
+        } catch (error) {
+            console.error('Error loading countries:', error);
+            // Fallback to a few common countries if API fails
+            const fallbackCountries = [
+                { name: 'United States', currency: 'USD' },
+                { name: 'United Kingdom', currency: 'GBP' },
+                { name: 'Canada', currency: 'CAD' },
+                { name: 'Australia', currency: 'AUD' },
+                { name: 'Germany', currency: 'EUR' },
+                { name: 'Japan', currency: 'JPY' },
+                { name: 'India', currency: 'INR' },
+                { name: 'France', currency: 'EUR' },
+                { name: 'Brazil', currency: 'BRL' },
+                { name: 'China', currency: 'CNY' }
+            ];
+            
+            fallbackCountries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.name;
+                option.textContent = country.name;
+                option.setAttribute('data-currency', country.currency);
+                countrySelect.appendChild(option);
+            });
+        }
+    }
+    
+    // Auto-fill currency when country is selected
+    countrySelect.addEventListener('change', () => {
+        const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+        const currencyCode = selectedOption.getAttribute('data-currency');
+        if (currencyCode) {
+            currencyInput.value = currencyCode;
+        } else {
+            currencyInput.value = '';
+        }
+    });
+    
+    // Function to get CSRF token from cookies
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
             }
         }
+        return cookieValue;
+    }
+    
+    // Show loading state on buttons
+    function setLoadingState(button, isLoading) {
+        if (isLoading) {
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+        } else {
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Sign In';
+        }
+    }
+    
+    // Show loading state for signup button
+    function setSignupLoadingState(button, isLoading) {
+        if (isLoading) {
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating Account...';
+        } else {
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-user-plus mr-2"></i>Create Company Account';
+        }
+    }
+    
+    // Login form submission
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const submitButton = this.querySelector('button[type="submit"]');
         
-        // Auto-fill currency when country is selected
-        countrySelect.addEventListener('change', () => {
-            const selectedOption = countrySelect.options[countrySelect.selectedIndex];
-            const currencyCode = selectedOption.getAttribute('data-currency');
-            if (currencyCode) {
-                currencyInput.value = currencyCode;
+        // Basic validation
+        if (!email || !password) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        // Set loading state
+        setLoadingState(submitButton, true);
+        
+        // Submit form to Django backend
+        const formData = new FormData();
+        formData.append('login-email', email);
+        formData.append('login-password', password);
+        
+        // Submit to the same URL (admin_login view handles both login and signup)
+        fetch('', {  // Empty string means current URL
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        })
+        .then(response => {
+            if (response.redirected) {
+                // If redirected, follow the redirect (to dashboard)
+                window.location.href = response.url;
             } else {
-                currencyInput.value = '';
+                return response.text().then(html => {
+                    // Check if there are error messages in the response
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const errorMessages = doc.querySelector('.alert-danger');
+                    
+                    if (errorMessages) {
+                        alert(errorMessages.textContent.trim());
+                    } else {
+                        alert('Login failed. Please check your credentials.');
+                    }
+                });
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred during login');
+        })
+        .finally(() => {
+            setLoadingState(submitButton, false);
         });
+    });
+    
+    // Signup form submission
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const fullName = document.getElementById('full-name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const companyName = document.getElementById('company-name').value;
+        const country = document.getElementById('country').value;
+        const terms = document.getElementById('terms').checked;
+        const submitButton = this.querySelector('button[type="submit"]');
         
-        // Form submission handlers
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const rememberMe = document.getElementById('remember-me').checked;
-            
-            // In a real app, you would send this to your backend
-            console.log('Login attempt:', { email, password, rememberMe });
-            
-            // Show success message
-            alert('Login successful! In a real application, you would be redirected to your dashboard.');
-        });
+        // Basic validation
+        if (!fullName || !email || !password || !confirmPassword || !companyName || !country) {
+            alert('Please fill in all required fields');
+            return;
+        }
         
-        document.getElementById('signupForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const fullName = document.getElementById('full-name').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            const companyName = document.getElementById('company-name').value;
-            const country = document.getElementById('country').value;
-            const currency = document.getElementById('currency').value;
-            const terms = document.getElementById('terms').checked;
-            
-            // Basic validation
-            if (password !== confirmPassword) {
-                alert('Passwords do not match');
-                return;
+        if (password !== confirmPassword) {
+            alert('Passwords do not match');
+            return;
+        }
+        
+        if (!terms) {
+            alert('Please agree to the Terms of Service and Privacy Policy');
+            return;
+        }
+        
+        // Set loading state
+        setSignupLoadingState(submitButton, true);
+        
+        // Submit form to Django backend
+        const formData = new FormData();
+        formData.append('full-name', fullName);
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('confirm-password', confirmPassword);
+        formData.append('company-name', companyName);
+        formData.append('country', country);
+        formData.append('terms', terms);
+        
+        // Submit to the same URL (admin_login view handles both login and signup)
+        fetch('', {  // Empty string means current URL
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCSRFToken()
             }
-            
-            if (!terms) {
-                alert('Please agree to the Terms of Service and Privacy Policy');
-                return;
+        })
+        .then(response => {
+            if (response.redirected) {
+                // If redirected, follow the redirect (to dashboard)
+                window.location.href = response.url;
+            } else {
+                return response.text().then(html => {
+                    // Check if there are error messages in the response
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const errorMessages = doc.querySelector('.alert-danger');
+                    
+                    if (errorMessages) {
+                        alert(errorMessages.textContent.trim());
+                    } else {
+                        alert('Signup failed. Please try again.');
+                    }
+                });
             }
-            
-            // In a real app, you would send this to your backend
-            console.log('Signup attempt:', { 
-                fullName, 
-                email, 
-                password, 
-                companyName, 
-                country, 
-                currency,
-                role: 'Admin' 
-            });
-            
-            // Show success message
-            alert('Company account created successfully! You can now log in with your credentials.');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred during signup');
+        })
+        .finally(() => {
+            setSignupLoadingState(submitButton, false);
         });
-        
-        // Initialize the page
-        loadCountries();
-    </script>
+    });
+    loadCountries();
+</script>
 </body>
 </html>
